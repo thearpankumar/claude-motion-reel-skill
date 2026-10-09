@@ -131,6 +131,10 @@ Or, if you want to keep Homebrew Python: `python3 -m pip install --user --break-
 
 The Geist font in `presets/lukas-yt/fonts` is under the SIL Open Font License (`OFL-Geist.txt`).
 
+## License
+
+Copyright 2026 Arpan Kumar. Licensed under the [Apache License, Version 2.0](LICENSE). The bundled Geist font keeps its own SIL Open Font License.
+
 ## Credits
 
 Created and maintained by **Arpan Kumar** · [arpankumar1119@gmail.com](mailto:arpankumar1119@gmail.com) · [GitHub: thearpankumar](https://github.com/thearpankumar)

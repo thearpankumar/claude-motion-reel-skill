@@ -2,6 +2,7 @@
   "name": "claude-motion-reel-skill",
   "version": "1.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "Beat-synced motion reels made in code with Claude Code: the /motion-reel skill, house rules, brand presets and the chapter prompts.",
   "scripts": {
     "setup": "npx playwright install chromium",
