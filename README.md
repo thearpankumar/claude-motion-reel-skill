@@ -102,6 +102,15 @@ It writes `videos/_test-<time>/renders/16x9.mp4`. To test a preset of your own: 
 7. **Critique loop:** contact sheets, fast-action strips, phone test at 360 px, loop seam. A fresh critic scores 8 criteria, and it fixes the 3 worst problems each round. At least 3 rounds, until every score is 8+.
 8. **Finals:** 60 fps with motion blur, SFX, a -14 LUFS mix, every format.
 
+## GPU first, CPU fallback
+
+`render.mjs` picks its backend automatically on every machine and prints it (`[render] painting: …`, `[render] encoding: …`).
+
+- **Painting:** Chromium rasterizes on the GPU. It drops to the CPU (SwiftShader) if it sees no real GPU, or if the GPU fails the cold-vs-after-seek repaint check that the `seek(t)` contract depends on.
+- **Encoding:** the first hardware H.264 encoder that passes a real test encode: NVIDIA NVENC, Intel Quick Sync, AMD AMF, Apple VideoToolbox, or Linux VAAPI, at constant quality matched to CRF. Otherwise libx264 on the CPU. If a hardware encode fails part-way, that format is redone on libx264.
+- **Overrides:** `--gpu auto|on|off`, `--encoder auto|cpu|<ffmpeg encoder>`, or the env vars `MOTION_GPU` and `MOTION_ENCODER`. Agents are told to use the GPU first and never switch to the CPU unless the GPU path fails (see `CLAUDE.md` and the skill's `RULES.md`).
+- **What to expect:** encoding is where it helps most (about 4x faster at the slow preset on an Intel iGPU). Capturing frames dominates a render, so total time improves by less. Only NVENC, QSV and the Windows path were exercised while building this; VideoToolbox, VAAPI and AMF are untested here and fall back to the CPU if they fail.
+
 Optional voiceover uses the Fish Audio MCP. Connect it in Claude Code first, and use your own cloned voice if you have one.
 
 ## Troubleshooting

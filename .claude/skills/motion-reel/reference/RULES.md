@@ -7,7 +7,15 @@ Apply these in every project, including one with no CLAUDE.md. A project's CLAUD
 - Render mode has no CSS transitions or animations, no `setTimeout`, no `requestAnimationFrame`, no `Date`, and no state carried between frames (no module variable mutated in `run()`).
 - Randomness is seeded only (`C.mulberry32(seed)`, `C.noise1(seed)`). Never `Math.random`.
 - Output is H.264 yuv420p, CRF 16, bt709 tags, 60 fps finals, AAC 320k, `+faststart`.
-- Verify determinism once per project: `node scripts/render.mjs --verify --all`.
+- **GPU first, CPU only as the fallback**, for painting and for encoding, on every machine:
+  - `render.mjs` does it automatically (`--gpu auto`, the default). Chromium paints on the GPU; ffmpeg uses the first hardware H.264 encoder that passes a real test encode (NVIDIA NVENC, Intel QSV, AMD AMF, Apple VideoToolbox, Linux VAAPI), at a constant quality matched to the CRF.
+  - It falls back to the CPU (SwiftShader painting, libx264 encoding) only when Chromium sees no real GPU, the GPU fails the cold-vs-after-seek repaint check, or a hardware encode fails mid-run (that format is then redone on libx264).
+  - Do not pass `--gpu off` or `--encoder cpu` as a shortcut. Use them only after the GPU path has actually failed, and tell the user.
+  - Read the `[render] painting:` and `[render] encoding:` lines of every run, report the backend, and if it ran on the CPU say why.
+  - Keep one backend per film. GPU and CPU antialias slightly differently, so do not mix them across drafts, sheets and finals.
+  - Overrides: `--gpu auto|on|off`, `--encoder auto|cpu|<ffmpeg encoder>`, env `MOTION_GPU` / `MOTION_ENCODER`.
+  - Expect the encode step to speed up most (about 4x at the slow preset on an Intel iGPU). Frame capture dominates a render, so total time improves less.
+- Verify determinism once per project: `node scripts/render.mjs --verify --all`. It runs on whichever backend was chosen, and it must pass on the GPU.
 - No `will-change`, no `translate3d`, no `translateZ(0)`. A composited GPU layer caches its raster, so the same t paints differently depending on the previous frame (measured: 9/12 probes differed, up to 211/255 per pixel). Use 2D transforms (`C.put` does). If a shot truly needs CSS 3D (`perspective` / `rotateX`), run `--verify` on it. If it fails, fake the depth in 2D (skew + scale + shadow) or draw it on a canvas.
 
 ## Look

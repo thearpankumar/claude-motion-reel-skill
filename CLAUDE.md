@@ -5,6 +5,11 @@
 - No CSS transitions, no setTimeout, no requestAnimationFrame in render mode, no state carried between frames. Seeded noise only (mulberry32), never Math.random.
 - No will-change, translate3d or translateZ(0). Composited layers make the same t paint differently. Use 2D transforms.
 - Render with node render.mjs, encode H.264 yuv420p, CRF 16.
+- GPU first, CPU only as the fallback, for painting and for encoding. render.mjs already does this by itself (`--gpu auto`, the default): Chromium paints on the GPU and ffmpeg uses the first hardware H.264 encoder that works (NVENC, QSV, AMF, VideoToolbox, VAAPI). It drops to the CPU (SwiftShader + libx264) only when there is no usable GPU, the GPU does not repaint identical frames, or a hardware encode fails.
+  - Never pass `--gpu off` or `--encoder cpu` to save yourself a problem. Use them only after the GPU path has actually failed, and say so.
+  - Read the `[render] painting:` and `[render] encoding:` lines of every run and tell the user which backend was used. If it ran on the CPU, say why.
+  - Use one backend per film: GPU and CPU antialias differently, so do not mix them between drafts, sheets and finals.
+  - This does not relax the rule above. "No will-change/translate3d" is about CSS layers inside the page; GPU rendering is the browser's backend, and `--verify` must still pass on it.
 
 ## Motion
 - Springs only: closed-form springs from lib/motion.js. No easing curves for anything that enters, exits or retargets.

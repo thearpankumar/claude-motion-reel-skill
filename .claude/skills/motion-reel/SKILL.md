@@ -83,6 +83,8 @@ node scripts/render.mjs --range 3,5
 ```
 Verify determinism once per project: `node scripts/render.mjs --verify --all` (must report all probes identical).
 
+**Rendering uses the GPU first and the CPU only as the fallback**: every `render.mjs` run picks the backend itself, so just run it, never add `--gpu off` or `--encoder cpu` to avoid trouble. Read its `[render] painting:` and `[render] encoding:` lines, keep one backend for the whole film (do not mix GPU and CPU renders), and tell the user which one was used and, if it was the CPU, why. Details: RULES.md → Render contract.
+
 ## 8. Critique loop: at least 3 rounds, until every score is ≥ 8
 Each round:
 1. `node scripts/sfx.mjs && python scripts/mix.py` (draft sound, so sync can be scored)
@@ -94,7 +96,7 @@ Each round:
 Stop only when the verdict is SHIP: every score ≥ 8 and at least 3 rounds done. Never show the user a film before that.
 
 ## 9. Final render, SFX, mix, all formats
-1. **Render** the primary format: `node scripts/render.mjs` (60 fps, adaptive 180° motion blur). Watch it via `review.py` on the final: `python scripts/review.py final`.
+1. **Render** the primary format: `node scripts/render.mjs` (60 fps, adaptive 180° motion blur; GPU painting and hardware encode first, CPU fallback; report the backend it prints). Watch it via `review.py` on the final: `python scripts/review.py final`.
 2. **SFX:** re-check `metrics.sync` on the final. Nudge marks or gains in `timeline.sfx`, then run `sync.mjs` and `sfx.mjs`.
 3. **Mix:** `python scripts/mix.py`. It must reach -14 LUFS with true peak ≤ -1 dBTP and print no WARNING.
 4. **All formats:** `node scripts/render.mjs --all` (or `--mux --all` if only the audio changed). Run `python scripts/review.py final` again and look at every `phone_*.jpg` and `safe_9x16.jpg`.

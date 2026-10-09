@@ -93,6 +93,9 @@ node scripts/render.mjs --range 3,5                           blurred 60 fps cli
 node scripts/render.mjs --draft --all                         30 fps drafts for the critique kit
 node scripts/render.mjs --all                                 finals (adaptive 180° motion blur)
 node scripts/render.mjs --mux --all                           new mix into existing finals
-node scripts/render.mjs --verify --all                        determinism check (cold vs after seeking elsewhere)
+node scripts/render.mjs --verify --all                        determinism check (cold vs after seeking elsewhere), on the chosen backend
+node scripts/render.mjs ... --gpu auto|on|off                 GPU first (default auto), CPU fallback; prints "[render] painting: GPU (...)" / "CPU"
+node scripts/render.mjs ... --encoder auto|cpu|h264_nvenc|h264_qsv|h264_amf|h264_videotoolbox|h264_vaapi
+                                                              hardware H.264 first (default auto), libx264 fallback; prints "[render] encoding: ..."
 file:///<project>/film/index.html?play                         preview player in a browser (click to play with audio/mix.wav)
 ```
