@@ -17,7 +17,7 @@ stem = None
 if '--stem' in args:
     i = args.index('--stem'); stem = args[i + 1]; del args[i:i + 2]
 PATH = args[0] if args else 'audio/music.wav'
-TL = json.load(open('timeline.json')) if os.path.exists('timeline.json') else {}
+TL = json.load(open('timeline.json', encoding='utf-8')) if os.path.exists('timeline.json') else {}
 HINT = float(TL.get('bpm', 120))
 
 y_mix, sr = librosa.load(PATH, sr=None, mono=True)
@@ -90,7 +90,7 @@ out = {
     'beats': beats, 'downbeats': downbeats, 'downbeat_phase': phase, 'downbeat_scores': [round(float(s), 3) for s in scores],
     'hits': hits,
 }
-json.dump(out, open('beats.json', 'w'), indent=1)
+json.dump(out, open('beats.json', 'w', encoding='utf-8'), indent=1)
 print(f"bpm {out['bpm']} (tracker {tempo:.2f}, hint {HINT:g})  phase corr {phase_corr * 1000:+.2f} ms  beats {len(beats)} (snapped {snapped})  first {beats[0]:.4f}s  max residual {out['max_grid_residual_ms']} ms")
 print(f"downbeat phase {phase}  scores {out['downbeat_scores']}")
 print(f"hits {len(hits)} (strong >=0.3: {int(strong.sum())})")

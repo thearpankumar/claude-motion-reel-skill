@@ -19,8 +19,6 @@ else
   PROJARG  := --project
 endif
 
-CLAUDE_HOME ?= $(if $(CLAUDE_CONFIG_DIR),$(CLAUDE_CONFIG_DIR),$(HOME)/.claude)
-
 .PHONY: help install test uninstall
 
 help:

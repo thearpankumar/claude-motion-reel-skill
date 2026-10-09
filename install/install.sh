@@ -49,7 +49,14 @@ ok "skill, engine, scripts, templates and presets copied"
 
 say "3/4  Installing Playwright + Chromium (for rendering)"
 (cd "$DEST" && npm install --silent --no-audit --no-fund >/dev/null && npx --yes playwright install chromium >/dev/null) \
-  && ok "playwright + chromium ready" || { echo "npm install failed in $DEST"; exit 1; }
+  && ok "playwright + chromium installed" || { echo "npm install failed in $DEST"; exit 1; }
+if (cd "$DEST" && node -e "require('playwright').chromium.launch().then(b => b.close())" >/dev/null 2>&1); then
+  ok "chromium launches"
+else
+  warn "chromium is installed but does not launch."
+  [ "$(uname -s)" = "Linux" ] && echo "    On Linux it needs system libraries. Run:  sudo npx playwright install-deps chromium   (inside $DEST), then re-run this installer."
+  [ "$(uname -s)" = "Linux" ] || echo "    Re-run this installer, or run: npx playwright install chromium (inside $DEST)."
+fi
 
 say "4/4  Installing Python audio libraries (numpy, scipy, soundfile, librosa, pillow)"
 if "$PY" -c "import numpy, scipy, soundfile, librosa, PIL" 2>/dev/null; then

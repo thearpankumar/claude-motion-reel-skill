@@ -19,7 +19,7 @@ import numpy as np, soundfile as sf
 from scipy.signal import butter, sosfilt
 
 SR = 48000
-TL = json.loads(Path('timeline.json').read_text())
+TL = json.loads(Path('timeline.json').read_text(encoding='utf-8'))
 DUR = float(TL['duration'])
 V = Path('audio/vo')
 
@@ -69,7 +69,7 @@ def segments(y, thresh_db=-38, min_sil=0.06, min_len=0.08):
 
 def beat_time(x):
     x = TL['marks'][x] if isinstance(x, str) else float(x)
-    G = json.loads(Path('beats.json').read_text()) if Path('beats.json').exists() else {'beats': [], 'beat': 60 / TL['bpm'], 'offset': 0}
+    G = json.loads(Path('beats.json').read_text(encoding='utf-8')) if Path('beats.json').exists() else {'beats': [], 'beat': 60 / TL['bpm'], 'offset': 0}
     B, P = G['beats'], G.get('beat', 60 / TL['bpm'])
     if not B: return G.get('offset', 0) + x * P
     if x <= 0: return B[0] + x * P
@@ -93,7 +93,7 @@ def scan():
 
 
 def place():
-    spec = json.loads(Path('vo.json').read_text())
+    spec = json.loads(Path('vo.json').read_text(encoding='utf-8'))
     bus = np.zeros(int(SR * DUR)); placed = []; takes = {}
     for ph in spec['phrases']:
         y = takes.setdefault(ph['take'], load(ph['take']))
@@ -106,7 +106,7 @@ def place():
     bus = sosfilt(butter(2, 90, 'highpass', fs=SR, output='sos'), bus)        # presence: HPF + gentle saturation
     bus = np.tanh(bus * 1.6) / np.tanh(1.6)
     sf.write('audio/vo.wav', bus, SR, subtype='PCM_24')
-    Path('audio/vo_placed.json').write_text(json.dumps(placed, indent=1))
+    Path('audio/vo_placed.json').write_text(json.dumps(placed, indent=1), encoding='utf-8')
     for p in placed: print(f"{p['t0']:6.2f}–{p['t1']:6.2f}  {p['text']}")
     over = [(p['id'], q['id'], round(p['t1'] - q['t0'], 3)) for p, q in zip(placed, placed[1:]) if q['t0'] < p['t1'] - 0.005]
     late = [p['id'] for p in placed if p['t1'] > DUR]

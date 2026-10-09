@@ -19,7 +19,7 @@ import json, os, re
 import numpy as np, soundfile as sf
 from scipy import signal
 
-TL = json.load(open('timeline.json'))
+TL = json.load(open('timeline.json', encoding='utf-8'))
 MU = TL.get('music') or {}
 SR, DUR, BPM = 48000, float(TL['duration']), float(TL['bpm'])
 BEAT = 60 / BPM; N = int(SR * DUR); NB = int(np.ceil(DUR / BEAT))

@@ -5,7 +5,7 @@
 # The music is trimmed/padded to timeline.duration with a 0.3 s tail fade, and side-chain ducked under the VO.
 import json, os, subprocess
 
-TL = json.load(open('timeline.json'))
+TL = json.load(open('timeline.json', encoding='utf-8'))
 DUR = float(TL['duration'])
 LV = {'music': 0.0, 'sfx': -3.0, 'vo': 0.0, 'duck': True, **(TL.get('mix') or {})}
 have = {k: os.path.exists(f'audio/{k}.wav') for k in ('music', 'sfx', 'vo')}

@@ -13,7 +13,7 @@ A film is a pure function of time. `window.seek(t)` paints frame t in headless C
 
 ## Platform notes (Windows, macOS, Linux)
 - **No `sh` needed.** Every command in this skill is `node …` or `python …`. `init.mjs` scaffolds a film on any OS.
-- **Python command:** commands here say `python`. On macOS/Linux, where only `python3` exists, read it as `python3`. On Windows use `python` (or `py`); the `python3` Microsoft Store stub does not work. Check the libraries with `python -c "import numpy,scipy,soundfile,librosa,PIL"`.
+- **Python command:** commands here say `python`. `init.mjs` finds the interpreter that has the audio libraries and writes it to `.python` in the film folder (`python3` on macOS/Linux, `python` on Windows; the `python3` Microsoft Store stub never works). Use that command wherever these docs say `python`. Check the libraries with `<python> -c "import numpy,scipy,soundfile,librosa,PIL"`.
 - **Windows shell:** use PowerShell. If `node` is only available through fnm/nvm, load it first in the same call, e.g. `fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression; fnm use 24 | Out-Null`.
 - `<skill>` = `~/.claude/skills/motion-reel` (`$HOME\.claude\skills\motion-reel` on Windows), or `<project>/.claude/skills/motion-reel` for a project-only install. Playwright + Chromium live in the skill's `node_modules`; `init.mjs` links them into each film (symlink, or a junction on Windows).
 - The ffmpeg scene-cut command in step 2 pipes to `grep`; in PowerShell use `Select-String pts_time` instead.

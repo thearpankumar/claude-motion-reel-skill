@@ -23,12 +23,20 @@ function Ok($m)   { Write-Host "  [ok] $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "  [!]  $m" -ForegroundColor Yellow }
 function Die($m)  { Write-Host $m -ForegroundColor Red; exit 1 }
 function Has($c)  { [bool](Get-Command $c -ErrorAction SilentlyContinue) }
+# Run a native command quietly and return its exit code. Windows PowerShell 5.1 turns any stderr output of a native
+# command into a terminating error under $ErrorActionPreference='Stop' (pip, npm and the python3 Store stub all write
+# to stderr), so errors are relaxed inside and the exit code is checked instead.
+function Native([scriptblock]$Sb) {
+  $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+  try { & $Sb *> $null } finally { $ErrorActionPreference = $old }
+  return $LASTEXITCODE
+}
 
 Say '1/4  Checking tools'
 # node managed by fnm is only on PATH after `fnm env`: load it if needed
 if (-not (Has 'node') -and (Has 'fnm')) {
   fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
-  fnm use 2>$null | Out-Null
+  Native { fnm use } | Out-Null
 }
 if (-not (Has 'node')) { Die 'Node is missing. Install Node 22+ (winget install OpenJS.NodeJS.LTS) and re-run.' }
 if (-not (Has 'npm'))  { Die 'npm is missing. It ships with Node: reinstall Node 22+ and re-run.' }
@@ -40,8 +48,7 @@ Ok 'ffmpeg'
 $Py = $null
 foreach ($c in 'python', 'python3', 'py') {
   if (Has $c) {
-    & $c -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' 2>$null
-    if ($LASTEXITCODE -eq 0) { $Py = $c; break }
+    if ((Native { & $c -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' }) -eq 0) { $Py = $c; break }
   }
 }
 if (-not $Py) { Die 'Python 3.9+ is missing. Install it (winget install Python.Python.3.12) and re-run.' }
@@ -63,20 +70,19 @@ Ok 'skill, engine, scripts, templates and presets copied'
 Say '3/4  Installing Playwright + Chromium (for rendering)'
 Push-Location $Dest
 try {
-  npm install --silent --no-audit --no-fund *> $null
-  if ($LASTEXITCODE) { Die "npm install failed in $Dest" }
-  npx --yes playwright install chromium *> $null
-  if ($LASTEXITCODE) { Die "playwright install failed in $Dest" }
+  if ((Native { npm install --silent --no-audit --no-fund }) -ne 0) { Die "npm install failed in $Dest" }
+  if ((Native { npx --yes playwright install chromium }) -ne 0) { Die "playwright install failed in $Dest" }
+  if ((Native { node -e "require('playwright').chromium.launch().then(b => b.close())" }) -ne 0) { Die 'Chromium was installed but does not launch. Re-run, or run: npx playwright install chromium' }
 } finally { Pop-Location }
-Ok 'playwright + chromium ready'
+Ok 'playwright + chromium ready (launch tested)'
 
 Say '4/4  Installing Python audio libraries (numpy, scipy, soundfile, librosa, pillow)'
-& $Py -c 'import numpy, scipy, soundfile, librosa, PIL' 2>$null
-if ($LASTEXITCODE -eq 0) { Ok 'already installed' }
+$req = Join-Path $Kit 'requirements.txt'
+if ((Native { & $Py -c 'import numpy, scipy, soundfile, librosa, PIL' }) -eq 0) { Ok 'already installed' }
 else {
-  & $Py -m pip install --user -q -r (Join-Path $Kit 'requirements.txt') 2>$null
-  if ($LASTEXITCODE -ne 0) { & $Py -m pip install -q -r (Join-Path $Kit 'requirements.txt') 2>$null }
-  if ($LASTEXITCODE -eq 0) { Ok 'installed' }
+  $rc = Native { & $Py -m pip install --user -q -r $req }
+  if ($rc -ne 0) { $rc = Native { & $Py -m pip install -q -r $req } }
+  if ($rc -eq 0) { Ok 'installed' }
   else { Warn 'pip could not install them. Music, beat grid and mix need them.'; Write-Host "    Fix: run  $Py -m pip install -r requirements.txt  and read 'Troubleshooting' in $Kit\README.md." }
 }
 

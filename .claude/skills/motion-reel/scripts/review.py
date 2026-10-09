@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 R = next((a for a in sys.argv[1:] if not a.startswith('--')), '1')
 DRAFT = '--draft' in sys.argv
 OUT = f'review/r{R}'; os.makedirs(OUT, exist_ok=True)
-TL = json.load(open('timeline.json'))
+TL = json.load(open('timeline.json', encoding='utf-8'))
 V = {f: f"renders/{'draft_' if DRAFT else ''}{f}.mp4" for f in TL['formats'] if os.path.exists(f"renders/{'draft_' if DRAFT else ''}{f}.mp4")}
 if not V: raise SystemExit('no renders found: node scripts/render.mjs --draft --all  (or a final render)')
 P = TL['formats'][0] if TL['formats'][0] in V else next(iter(V))
@@ -34,7 +34,11 @@ def frames(path, w, h, fps=None, gray=False):
     return a.reshape(-1, h, w) if gray else a.reshape(-1, h, w, 3)
 def frames_at(path, idx, w, h):
     sel = '+'.join(f'eq(n\\,{i})' for i in idx)
-    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-vf', f"select='{sel}',scale={w}:{h}:flags=area", '-vsync', '0', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], capture_output=True, check=True).stdout
+    cmd = ['ffmpeg', '-v', 'error', '-i', path, '-vf', f"select='{sel}',scale={w}:{h}:flags=area", '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']
+    # ffmpeg 5.1+ wants -fps_mode and 8+ removed -vsync; older builds only know -vsync
+    r = subprocess.run(cmd[:-5] + ['-fps_mode', 'passthrough'] + cmd[-5:], capture_output=True)
+    if r.returncode: r = subprocess.run(cmd[:-5] + ['-vsync', '0'] + cmd[-5:], capture_output=True, check=True)
+    raw = r.stdout
     return np.frombuffer(raw, np.uint8).reshape(-1, h, w, 3)
 def tile(ims, cols, labels, out, pad=6, lab=22, bg=(20, 20, 20)):
     w, h = ims[0].size; rows = (len(ims) + cols - 1) // cols
@@ -117,7 +121,7 @@ if os.path.exists('cues.json'):
         def near_onset(sig, t, w=0.12):
             c = int(round(t * FPS)); lo = max(0, c - int(w * FPS)); hi = max(lo + 1, min(len(sig), c + int(w * FPS)))
             seg = sig[lo:hi]; return (lo + int(np.argmax(seg >= 0.5 * seg.max())) + 1) / FPS - t
-        cues = json.load(open('cues.json'))['cues']
+        cues = json.load(open('cues.json', encoding='utf-8'))['cues']
         rows = []
         for c in cues:
             if c['t'] >= DUR - 0.05: continue
@@ -130,7 +134,7 @@ lo = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', V[P], '-af', 'e
 summ = lo[lo.rfind('Summary'):]
 M['loudness'] = {l.split(':')[0].strip(): l.split(':')[1].strip() for l in summ.splitlines() if l.strip().startswith(('I:', 'Peak:'))} or 'no audio'
 
-json.dump(M, open(f'{OUT}/metrics.json', 'w'), indent=1)
+json.dump(M, open(f'{OUT}/metrics.json', 'w', encoding='utf-8'), indent=1)
 print(json.dumps({k: v for k, v in M.items() if k != 'sync'}, indent=1))
 if 'sync' in M: print('sync:', M['sync']['hits_within_45ms'], 'hits within 45 ms, mean', M['sync']['hits_mean_abs_ms'], 'ms')
 print(f'wrote {OUT}/: ' + ' '.join(sorted(os.listdir(OUT))))

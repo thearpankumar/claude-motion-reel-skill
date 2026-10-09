@@ -30,6 +30,8 @@ You describe the product. Claude captures the real brand from its site, writes a
 | Windows | `winget install OpenJS.NodeJS.LTS Gyan.FFmpeg Python.Python.3.12` (then open a new terminal) |
 | Debian/Ubuntu | `sudo apt install nodejs npm ffmpeg python3 python3-pip` |
 
+On Linux the distro's `nodejs` is often older than 22: use [nodejs.org](https://nodejs.org), nvm or fnm for a current one. Chromium also needs system libraries on Linux; if the installer says it doesn't launch, run `sudo npx playwright install-deps chromium` inside `~/.claude/skills/motion-reel`.
+
 **2. Run the installer** from inside this folder
 ```bash
 make install

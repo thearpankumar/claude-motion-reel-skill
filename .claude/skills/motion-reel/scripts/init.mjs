@@ -1,4 +1,4 @@
-// Scaffold a motion-reel project (cross-platform port of init.sh; no sh needed):
+// Scaffold a motion-reel project (Windows, macOS and Linux; no sh needed):
 //   node <skill>/scripts/init.mjs videos/<slug> [--preset <name|path>]
 // Copies the engine (film/), the pipeline scripts (scripts/) and the templates (brief, timeline, docs) into a NEW folder.
 // Refuses an existing non-empty folder: parallel sessions often pick the same slug. Pick a distinctive one.
@@ -49,8 +49,13 @@ console.log(`scaffolded ${destArg}`);
 // toolchain checks (warn, don't fail)
 if (sh('ffmpeg', ['-version']).status !== 0) console.log('WARN: ffmpeg not on PATH');
 if (!canResolve()) console.log(`WARN: playwright not resolvable from ${destArg} → run: npm i -D playwright && npx playwright install chromium`);
-const py = ['python', 'python3', 'py'].find((c) => sh(c, ['-c', 'import numpy, scipy, soundfile, librosa, PIL']).status === 0);
-if (!py) console.log('WARN: python deps missing → python -m pip install numpy scipy soundfile librosa pillow');
+// the interpreter that has the audio libraries: Windows has `python` (the `python3` Store stub never works), macOS/Linux have `python3`
+const pyCandidates = process.platform === 'win32' ? ['python', 'py', 'python3'] : ['python3', 'python'];
+const py = pyCandidates.find((c) => sh(c, ['-c', 'import numpy, scipy, soundfile, librosa, PIL']).status === 0);
+if (py) {
+  fs.writeFileSync(path.join(DEST, '.python'), py + '\n');
+  console.log(`python command for this film: ${py}  (written to .python; use it wherever the docs say "python")`);
+} else console.log('WARN: python deps missing → python -m pip install numpy scipy soundfile librosa pillow (use python3 on macOS/Linux)');
 if (sh(process.execPath, ['film/lib/motion.test.js']).status === 0) console.log('motion.js tests pass');
 if (sh(process.execPath, ['scripts/sync.mjs']).status === 0) console.log('film/data.js written (nominal grid until beats.json exists)');
 console.log('next: fill brief.md, then follow SKILL.md step 2 (assets)');

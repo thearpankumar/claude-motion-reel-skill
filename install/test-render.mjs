@@ -34,7 +34,7 @@ const tlFile = path.join(proj, 'timeline.json'), TL = JSON.parse(fs.readFileSync
 TL.duration = secs; TL.formats = [TL.formats[0]];
 fs.writeFileSync(tlFile, JSON.stringify(TL, null, 2));
 
-const py = ['python3', 'python', 'py'].find((c) => run(c, ['-c', 'import numpy, scipy, soundfile, librosa'], proj, true));
+const py = (process.platform === 'win32' ? ['python', 'py', 'python3'] : ['python3', 'python']).find((c) => run(c, ['-c', 'import numpy, scipy, soundfile, librosa'], proj, true));
 if (py) {
   must(run(py, ['scripts/music.py'], proj), 'music.py failed');
   must(run(py, ['scripts/beats.py', 'audio/music.wav', '--stem', 'audio/drums.wav'], proj), 'beats.py failed');
