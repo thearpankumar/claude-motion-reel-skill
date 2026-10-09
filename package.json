@@ -1,0 +1,14 @@
+{
+  "name": "motion-reel-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Beat-synced motion reels made in code with Claude Code: the /motion-reel skill, house rules, brand presets and the chapter prompts.",
+  "scripts": {
+    "setup": "npx playwright install chromium",
+    "test": "node install/test-render.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  },
+  "author": "Arpan Kumar <arpankumar1119@gmail.com>"
+}

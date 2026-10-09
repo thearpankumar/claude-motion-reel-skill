@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# secrets and local config
+.env
+.env.*
+.claude/settings.local.json
+
+# film projects, renders and generated audio (made by /motion-reel, never committed)
+videos/
+*.wav
+*.npy
+
+# installer backups
+skills-backup/
+*.bak
+*.bak-*
+
+# logs
+npm-debug.log*
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
